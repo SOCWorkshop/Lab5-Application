@@ -49,6 +49,7 @@ services:
 volumes:
   db_data: {}
   wordpress_data: {}
+  filebeat: {}
 configs:
   fb_config:
     file: $PWD/filebeat.yml
