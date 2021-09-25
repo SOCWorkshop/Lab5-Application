@@ -1,7 +1,55 @@
 version: '3.9'
 services:
-  nginx:
+  log_generator:
+    image: banzaicloud/log-generator:0.3.2
     restart: always
-    image: 'nginx:latest'
+    args:
+        - --event-per-sec=10
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:latest
+    user: root
+    networks:
+      - elastic
+    configs:
+      - source: fb_config
+        target: /usr/share/filebeat/filebeat.yml
+    volumes:
+      - filebeat:/usr/share/filebeat/data
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
+      - /var/log/:/var/log/:ro
+      - /var/log/audit/:/var/log/audit/:ro
+    environment:
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH}
+      - KIBANA_HOST=${KIBANA}
+  db:
+    image: mysql:5.7
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: SocWorkshop1RootPassword
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: SOC
+      MYSQL_PASSWORD: SocWorkshop1
+
+  wordpress:
+    depends_on:
+      - db
+    image: wordpress:latest
+    volumes:
+      - wordpress_data:/var/www/html
     ports:
-     - 80:80
+      - "80:80"
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: SOC
+      WORDPRESS_DB_PASSWORD: SocWorkshop1
+      WORDPRESS_DB_NAME: wordpress
+volumes:
+  db_data: {}
+  wordpress_data: {}
+configs:
+  fb_config:
+    file: $PWD/filebeat.yml
