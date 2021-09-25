@@ -10,7 +10,7 @@ services:
     networks:
       - elastic
     configs:
-      - source: fb_config
+      - source: ./filebeat.yml
         target: /usr/share/filebeat/filebeat.yml
     volumes:
       - filebeat:/usr/share/filebeat/data
@@ -50,6 +50,3 @@ volumes:
   db_data: {}
   wordpress_data: {}
   filebeat: {}
-configs:
-  fb_config:
-    file: $PWD/filebeat.yml
